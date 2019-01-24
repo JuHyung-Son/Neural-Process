@@ -15,19 +15,27 @@ class NP(nn.Module):
         self.z_samples = z_samples
 
         self.h1 = nn.Linear(in_dim, hdim)
-        self.h2 = nn.Linear(hdim, hdim)
-        self.h3 = nn.Linear(hdim, out_dim)
+        self.h2 = nn.Linear(hdim, out_dim)
+        #self.h3 = nn.Linear(hdim, out_dim)
 
-        self.r_to_z_mean = nn.Linear(in_dim, out_dim)
-        self.r_to_z_std = nn.Linear(in_dim, out_dim)
+        self.r_to_z_mean = nn.Linear(in_dim, 1)
+        self.r_to_z_std = nn.Linear(in_dim, 1)
 
         self.d1 = nn.Linear(in_dim + 1, ddim)
-        self.d2 = nn.Linear(ddim, ddim)
-        self.d3 = nn.Linear(ddim, out_dim)
+        self.d2 = nn.Linear(ddim, out_dim)
+        #self.d3 = nn.Linear(ddim, out_dim)
+
+        nn.init.normal(self.h1.weight)
+        nn.init.normal(self.h2.weight)
+        #nn.init.normal(self.h3.weight)
+        nn.init.normal(self.d1.weight)
+        nn.init.normal(self.d2.weight)
+        #nn.init.normal(self.d3.weight)
 
     def data_to_z(self, x, y):
         x_y = torch.cat([x, y], dim=1)
-        r_i = self.h3(F.relu(self.h2(F.relu(self.h1(x_y)))))
+        #r_i = self.h3(F.relu(self.h2(F.relu(self.h1(x_y)))))
+        r_i = self.h2(F.relu(self.h1(x_y)))
         r = r_i.mean(dim=0)
         mean = self.r_to_z_mean(r)
         std = self.r_to_z_std(r)
@@ -43,7 +51,7 @@ class NP(nn.Module):
         x_pred = x_pred.unsqueeze(0).expand(z.size(0), x_pred.size(0), x_pred.size(1))
 
         x_z = torch.cat([x_pred, z], dim=-1)
-        decode = self.d3(F.sigmoid(self.d2(F.sigmoid(self.d1(x_z))).squeeze(-1).transpose(0, 1)))
+        decode = self.d2(F.sigmoid(self.d1(x_z).squeeze(-1).transpose(0, 1)))
         mu, logvar = torch.split(decode, 1, dim=-1)
         mu = mu.squeeze(-1)
         logvar = logvar.squeeze(-1)
@@ -88,8 +96,8 @@ def visualize(x, y, x_star, model):
             (mu[:, i] + sigma[:, i]).detach().cpu().numpy(), alpha=0.2
         )
         ax.scatter(x.data.cpu().numpy(), y.data.cpu().numpy(), color='b')
-        ax.plot(all_y_np)
-    plt.pause(0.000001)
+        ax.plot(all_x_np, all_y_np)
+    plt.pause(3)
     fig.canvas.draw()
 
 x_grid = torch.from_numpy(np.arange(-4, 4, 0.1).reshape(-1, 1).astype(np.float32))
@@ -97,14 +105,14 @@ all_x_np = np.arange(-4, 4, .1).reshape(-1, 1).astype(np.float32)
 all_y_np = np.sin(all_x_np)
 # all_y_np = np.exp(np.cos(all_x_np))**3 * 2*np.sin(all_x_np) - np.sin(all_x_np)*np.cos(all_x_np)
 
-model = NP(2, 2, 26, 26, 20).to(device)
+model = NP(2, 2, 4, 4, 85).to(device)
 optimizer =optim.Adam(model.parameters(), lr=0.1)
 
 def train(epochs):
     training_loss = 0
     for epoch in range(epochs):
         optimizer.zero_grad()
-        inputs = random_split_c_t(all_x_np, all_y_np, np.random.randint(1, 10))
+        inputs = random_split_c_t(all_x_np, all_y_np, np.random.randint(10, 20))
         for i in range(len(inputs)):
             inputs[i] = torch.from_numpy(inputs[i]).to(device)
         mu, std, z_mean_all, z_std_all, z_mean, z_std = model(inputs)
