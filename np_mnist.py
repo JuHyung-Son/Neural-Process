@@ -43,18 +43,18 @@ class NP(nn.Module):
         self.r_dim = r_dim
         self.z_dim = z_dim
 
-        self.h_1 = nn.Linear(3, 400)
-        self.h_2 = nn.Linear(400, 400)
-        self.h_3 = nn.Linear(400, self.r_dim)
+        self.h_1 = nn.Linear(3, 40)
+        self.h_2 = nn.Linear(40, 40)
+        self.h_3 = nn.Linear(40, self.r_dim)
 
         self.r_to_z_mean = nn.Linear(self.r_dim, self.z_dim)
         self.r_to_z_std = nn.Linear(self.r_dim, self.z_dim)
 
-        self.g_1 = nn.Linear(self.z_dim + 2, 400)
-        self.g_2 = nn.Linear(400, 400)
-        self.g_3 = nn.Linear(400, 400)
-        self.g_4 = nn.Linear(400, 400)
-        self.g_5 = nn.Linear(400, 1)
+        self.g_1 = nn.Linear(self.z_dim + 2, 40)
+        self.g_2 = nn.Linear(40, 40)
+        self.g_3 = nn.Linear(40, 40)
+        self.g_4 = nn.Linear(40, 40)
+        self.g_5 = nn.Linear(40, 1)
     
     def h(self, x_y):
         x_y = F.relu(self.h_1(x_y))

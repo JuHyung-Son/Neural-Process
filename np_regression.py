@@ -112,13 +112,13 @@ all_x_np = np.arange(-5, 5, .1).reshape(-1, 1).astype(np.float32)
 # all_y_np = np.sin(all_x_np)
 all_y_np = np.exp(np.cos(all_x_np))**3 * 2*np.sin(all_x_np) - np.sin(all_x_np)*np.cos(all_x_np)
 
-model = NP(6, 6, 20).to(device)
-optimizer =optim.Adam(model.parameters(), lr=0.1)
+model = NP(8, 8, 20).to(device)
+optimizer =optim.Adam(model.parameters(), lr=0.01)
 
 def train(epochs):
     for epoch in range(epochs):
         optimizer.zero_grad()
-        inputs = random_split_c_t(all_x_np, all_y_np, np.random.randint(1, 5))
+        inputs = random_split_c_t(all_x_np, all_y_np, np.random.randint(20, 30))
         for i in range(len(inputs)):
             inputs[i] = torch.from_numpy(inputs[i]).to(device)
         mu, std, z_mean_all, z_std_all, z_mean, z_std = model(inputs)
